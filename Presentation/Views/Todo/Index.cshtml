@@ -5,9 +5,29 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0">Mis Tareas</h2>
+        <button class="btn btn-primary" id="btn-new">Nueva tarea</button> 
     </div>
 
     <ul id="todo-list" class="list-group"></ul>
+</div>
+
+<div class="modal fade" id="todo-modal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="todo-modal-title">Nueva tarea</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control" id="todo-title-input" placeholder="Título de la tarea..." autocomplete="off">
+                <input type="text" class="form-control mt-2" id="todo-description-input" placeholder="Descripción de la tarea..." autocomplete="off">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="todo-save">Guardar</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
