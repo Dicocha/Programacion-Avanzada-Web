@@ -35,6 +35,12 @@
                 const id = $(this).closest("li").data("id");
                 self.openEditModal(id);
             });
+
+            $("#todo-list").on("click", ".btn-delete", function (e) {
+                e.preventDefault();
+                const id = $(this).closest("li").data("id");
+                self.delete(id);
+            });
         },
 
         loadTodos: function () {
@@ -72,6 +78,7 @@
                         </div>
                         <div class="btn-group btn-group-sm">
                             <button class="btn btn-outline-secondary btn-edit">Editar</button>
+                            <button class="btn btn-outline-danger btn-delete">Eliminar</button>
                         </div>
                     </li>`;
                 $list.append(html);
@@ -145,6 +152,23 @@
                 self.loadTodos();
             }).fail(function () {
                 console.error("Error cambiando estado");
+            });
+        },
+
+        delete: function (id) {
+            if (!confirm("¿Eliminar esta tarea?")) {
+                return;
+            }
+            const self = this;
+            $.ajax({
+                url: "/Todo/Delete",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ id: id })
+            }).done(function () {
+                self.loadTodos();
+            }).fail(function () {
+                console.error("Error eliminando tarea");
             });
         },
 

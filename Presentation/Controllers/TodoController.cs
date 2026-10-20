@@ -86,6 +86,19 @@ namespace MVC.Controllers
             return Ok();
         }
 
+        [HttpPost]
+        public IActionResult Delete([FromBody] DeleteTodoDto dto)
+        {
+            var todos = GetTodosFromSession();
+            var todo = todos.FirstOrDefault(t => t.Id == dto.Id);
+            if (todo != null)
+            {
+                todos.Remove(todo);
+                SaveTodosToSession(todos);
+            }
+            return Ok();
+        }
+
         private List<TodoItem> GetTodosFromSession()
         {
             var json = HttpContext.Session.GetString(SessionKeyTodos);
