@@ -1,0 +1,15 @@
+@{
+    ViewData["Title"] = "To-Do List";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Mis Tareas</h2>
+    </div>
+
+    <ul id="todo-list" class="list-group"></ul>
+</div>
+
+@section Scripts {
+    <script src="~/js/todo.js" asp-append-version="true"></script>
+}
