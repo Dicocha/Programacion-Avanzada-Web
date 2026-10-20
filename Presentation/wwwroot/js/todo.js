@@ -2,6 +2,8 @@
     "use strict";
 
     const TodoApp = {
+        currentEditId: null,
+
         init: function () {
             this.bindEvents();
             this.loadTodos();
@@ -26,6 +28,12 @@
                 e.preventDefault();
                 const id = $(this).closest("li").data("id");
                 self.toggle(id);
+            });
+
+            $("#todo-list").on("click", ".btn-edit", function (e) {
+                e.preventDefault();
+                const id = $(this).closest("li").data("id");
+                self.openEditModal(id);
             });
         },
 
@@ -62,16 +70,34 @@
                             <input class="form-check-input btn-toggle" type="checkbox" ${checked}>
                             <span class="ms-2 ${textClass}">${self.escapeHtml(item.title)}</span>${descriptionHtml}
                         </div>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-secondary btn-edit">Editar</button>
+                        </div>
                     </li>`;
                 $list.append(html);
             });
         },
 
         openCreateModal: function () {
+            this.currentEditId = null;
             $("#todo-modal-title").text("Nueva tarea");
             $("#todo-title-input").val("");
             $("#todo-description-input").val("");
             $("#todo-modal").modal("show");
+        },
+
+        openEditModal: function (id) {
+            this.currentEditId = id;
+            $("#todo-modal-title").text("Editar tarea");
+            $.get("/Todo/Get/" + id)
+                .done(function (todo) {
+                    $("#todo-title-input").val(todo.title || "");
+                    $("#todo-description-input").val(todo.description || "");
+                    $("#todo-modal").modal("show");
+                })
+                .fail(function () {
+                    console.error("Error cargando tarea");
+                });
         },
 
         saveTodo: function () {
@@ -81,17 +107,31 @@
                 return;
             }
             const self = this;
-            $.ajax({
-                url: "/Todo/Create",
-                method: "POST",
-                contentType: "application/json",
-                data: JSON.stringify({ title: title, description: description })
-            }).done(function () {
-                $("#todo-modal").modal("hide");
-                self.loadTodos();
-            }).fail(function () {
-                console.error("Error creando tarea");
-            });
+            if (this.currentEditId === null) {
+                $.ajax({
+                    url: "/Todo/Create",
+                    method: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ title: title, description: description })
+                }).done(function () {
+                    $("#todo-modal").modal("hide");
+                    self.loadTodos();
+                }).fail(function () {
+                    console.error("Error creando tarea");
+                });
+            } else {
+                $.ajax({
+                    url: "/Todo/Edit",
+                    method: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ id: self.currentEditId, title: title, description: description })
+                }).done(function () {
+                    $("#todo-modal").modal("hide");
+                    self.loadTodos();
+                }).fail(function () {
+                    console.error("Error editando tarea");
+                });
+            }
         },
 
         toggle: function (id) {

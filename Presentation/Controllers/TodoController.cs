@@ -21,6 +21,18 @@ namespace MVC.Controllers
             return Json(todos);
         }
 
+        [HttpGet]
+        public IActionResult Get(Guid id)
+        {
+            var todos = GetTodosFromSession();
+            var todo = todos.FirstOrDefault(t => t.Id == id);
+            if (todo == null)
+            {
+                return NotFound();
+            }
+            return Json(todo);
+        }
+
         [HttpPost]
         public IActionResult Create([FromBody] CreateTodoDto dto)
         {
@@ -38,6 +50,24 @@ namespace MVC.Controllers
                 IsCompleted = false,
                 CreatedAt = DateTime.UtcNow
             });
+            SaveTodosToSession(todos);
+            return Ok();
+        }
+
+        [HttpPost]
+        public IActionResult Edit([FromBody] EditTodoDto dto)
+        {
+            var todos = GetTodosFromSession();
+            var todo = todos.FirstOrDefault(t => t.Id == dto.Id);
+            if (todo == null)
+            {
+                return NotFound();
+            }
+            if (!string.IsNullOrWhiteSpace(dto.Title))
+            {
+                todo.Title = dto.Title.Trim();
+            }
+            todo.Description = string.IsNullOrWhiteSpace(dto.Description) ? string.Empty : dto.Description.Trim();
             SaveTodosToSession(todos);
             return Ok();
         }
