@@ -8,6 +8,12 @@
         <button class="btn btn-primary" id="btn-new">Nueva tarea</button> 
     </div>
 
+    <div class="btn-group mb-3 filters" role="group">
+        <button type="button" class="btn btn-outline-secondary filter-btn" data-filter="all">Todas</button>
+        <button type="button" class="btn btn-outline-secondary filter-btn" data-filter="pending">Pendientes</button>
+        <button type="button" class="btn btn-outline-secondary filter-btn" data-filter="completed">Completadas</button>
+    </div>
+
     <ul id="todo-list" class="list-group"></ul>
 </div>
 
@@ -31,5 +37,6 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/services/storage.js" asp-append-version="true"></script>
     <script src="~/js/todo.js" asp-append-version="true"></script>
 }

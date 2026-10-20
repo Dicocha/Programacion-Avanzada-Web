@@ -13,12 +13,18 @@ namespace MVC.Controllers
         {
             return View();
         }
-
+        
         [HttpGet]
-        public IActionResult List()
+        public IActionResult List(string filter = "all")
         {
             var todos = GetTodosFromSession();
-            return Json(todos);
+            IEnumerable<TodoItem> filtered = filter switch
+            {
+                "pending" => todos.Where(t => !t.IsCompleted).ToList(),
+                "completed" => todos.Where(t => t.IsCompleted).ToList(),
+                _ => todos
+            };
+            return Json(filtered);
         }
 
         [HttpGet]

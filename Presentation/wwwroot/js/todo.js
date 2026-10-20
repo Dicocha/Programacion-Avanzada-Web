@@ -1,16 +1,28 @@
 (function ($, window) {
     "use strict";
-
+    
     const TodoApp = {
+        currentFilter: "all",
         currentEditId: null,
 
         init: function () {
+            if (window.TodoStorage) {
+                this.currentFilter = window.TodoStorage.getFilter("all");
+            } else {
+                this.currentFilter = "all";
+            }
             this.bindEvents();
+            this.setActiveFilter(this.currentFilter);
             this.loadTodos();
         },
 
         bindEvents: function () {
             const self = this;
+
+            $(".filters").on("click", ".filter-btn", function () {
+                const filter = $(this).data("filter");
+                self.setFilter(filter);
+            });
 
             $("#btn-new").on("click", function () {
                 self.openCreateModal();
@@ -43,9 +55,26 @@
             });
         },
 
+        setFilter: function (filter) {
+            this.currentFilter = filter;
+            if (window.TodoStorage) {
+                window.TodoStorage.setFilter(filter);
+            }
+            this.setActiveFilter(filter);
+            this.loadTodos();
+        },
+
+        setActiveFilter: function (filter) {
+            $(".filter-btn").removeClass("active").removeClass("btn-secondary").addClass("btn-outline-secondary");
+            $(`.filter-btn[data-filter="${filter}"]`)
+                .removeClass("btn-outline-secondary")
+                .addClass("active")
+                .addClass("btn-secondary");
+        },
+
         loadTodos: function () {
             const self = this;
-            $.get("/Todo/List")
+            $.get("/Todo/List", { filter: this.currentFilter })
                 .done(function (data) {
                     self.render(data);
                 })
@@ -67,11 +96,12 @@
             items.forEach(function (item) {
                 const checked = item.isCompleted ? "checked" : "";
                 const textClass = item.isCompleted ? "text-decoration-line-through text-muted" : "";
+                const id = item.id;
                 const descriptionHtml = item.description
                     ? `<br><span class="ms-4 ${textClass}">${self.escapeHtml(item.description)}</span>`
                     : "";
                 const html = `
-                    <li class="list-group-item d-flex justify-content-between align-items-center" data-id="${self.escapeAttr(item.id)}">
+                    <li class="list-group-item d-flex justify-content-between align-items-center" data-id="${self.escapeAttr(id)}">
                         <div class="form-check flex-grow-1">
                             <input class="form-check-input btn-toggle" type="checkbox" ${checked}>
                             <span class="ms-2 ${textClass}">${self.escapeHtml(item.title)}</span>${descriptionHtml}
