@@ -21,6 +21,12 @@
             $("#todo-modal").on("shown.bs.modal", function () {
                 $("#todo-title-input").focus();
             });
+
+            $("#todo-list").on("click", ".btn-toggle", function (e) {
+                e.preventDefault();
+                const id = $(this).closest("li").data("id");
+                self.toggle(id);
+            });
         },
 
         loadTodos: function () {
@@ -45,12 +51,17 @@
 
             const self = this;
             items.forEach(function (item) {
+                const checked = item.isCompleted ? "checked" : "";
+                const textClass = item.isCompleted ? "text-decoration-line-through text-muted" : "";
                 const descriptionHtml = item.description
-                    ? `<br><span class="ms-4">${self.escapeHtml(item.description)}</span>`
+                    ? `<br><span class="ms-4 ${textClass}">${self.escapeHtml(item.description)}</span>`
                     : "";
                 const html = `
-                    <li class="list-group-item" data-id="${self.escapeAttr(item.id)}">
-                        <span>${self.escapeHtml(item.title)}</span>${descriptionHtml}
+                    <li class="list-group-item d-flex justify-content-between align-items-center" data-id="${self.escapeAttr(item.id)}">
+                        <div class="form-check flex-grow-1">
+                            <input class="form-check-input btn-toggle" type="checkbox" ${checked}>
+                            <span class="ms-2 ${textClass}">${self.escapeHtml(item.title)}</span>${descriptionHtml}
+                        </div>
                     </li>`;
                 $list.append(html);
             });
@@ -80,6 +91,20 @@
                 self.loadTodos();
             }).fail(function () {
                 console.error("Error creando tarea");
+            });
+        },
+
+        toggle: function (id) {
+            const self = this;
+            $.ajax({
+                url: "/Todo/Toggle",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ id: id })
+            }).done(function () {
+                self.loadTodos();
+            }).fail(function () {
+                console.error("Error cambiando estado");
             });
         },
 

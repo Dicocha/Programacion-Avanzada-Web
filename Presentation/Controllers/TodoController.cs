@@ -42,6 +42,20 @@ namespace MVC.Controllers
             return Ok();
         }
 
+        [HttpPost]
+        public IActionResult Toggle([FromBody] ToggleTodoDto dto)
+        {
+            var todos = GetTodosFromSession();
+            var todo = todos.FirstOrDefault(t => t.Id == dto.Id);
+            if (todo == null)
+            {
+                return NotFound();
+            }
+            todo.IsCompleted = !todo.IsCompleted;
+            SaveTodosToSession(todos);
+            return Ok();
+        }
+
         private List<TodoItem> GetTodosFromSession()
         {
             var json = HttpContext.Session.GetString(SessionKeyTodos);
