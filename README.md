@@ -17,7 +17,7 @@ funcionalidad y una rama por entrega.
 
 | Rama         | Contenido                                                  | Estado              |
 |--------------|------------------------------------------------------------|---------------------|
-| `master`     | Solo este README (punto de partida y referencia del repo)  | Activa              |
+| `master`     | README + bitácora de la reorganización del repositorio   | Activa              |
 | `tarea-1`    | Código fuente de la Tarea 1 — Web Forms, solución en capas | Entregada           |
 | `tarea-2`    | Código fuente de la Tarea 2 — ASP.NET Core MVC (To-Do List)| Entregada           |
 | `proyecto-1` | —                                                          | Esperando enunciado |
