@@ -7,6 +7,7 @@ App_Data/
 *.mdf
 *.ldf
 Backup/
+Backup*/
 UpgradeLog*.htm
 UpgradeLog*.xml
 *.user
