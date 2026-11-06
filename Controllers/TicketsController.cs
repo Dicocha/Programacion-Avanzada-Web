@@ -14,8 +14,11 @@ namespace HelpDesk.Web.Controllers
     {
         private readonly HelpDeskContext _context = new HelpDeskContext();
 
-        public ActionResult Index()
+        public ActionResult Index(string buscar, string estado)
         {
+            buscar = string.IsNullOrWhiteSpace(buscar) ? null : buscar.Trim();
+            estado = string.IsNullOrWhiteSpace(estado) ? null : estado.Trim();
+
             var usuarioId = ObtenerUsuarioId();
             var esAdministrador = User.IsInRole("Administrador");
             var query = _context.Tickets.AsNoTracking().AsQueryable();
@@ -23,6 +26,16 @@ namespace HelpDesk.Web.Controllers
             if (!esAdministrador)
             {
                 query = query.Where(t => t.IdUsuarioSolicitante == usuarioId);
+            }
+
+            if (buscar != null)
+            {
+                query = query.Where(t => t.Titulo.Contains(buscar) || t.Descripcion.Contains(buscar));
+            }
+
+            if (estado != null)
+            {
+                query = query.Where(t => t.Estado.Nombre == estado);
             }
 
             var tickets = query
@@ -40,7 +53,31 @@ namespace HelpDesk.Web.Controllers
                 })
                 .ToList();
 
-            return View(tickets);
+            if (Request.IsAjaxRequest())
+            {
+                return PartialView("_TicketTable", tickets);
+            }
+
+            var model = new TicketsIndexViewModel
+            {
+                Tickets = tickets,
+                Buscar = buscar,
+                Estado = estado,
+                Estados = _context.EstadosTicket
+                    .AsNoTracking()
+                    .OrderBy(e => e.Id)
+                    .Select(e => new SelectListItem
+                    {
+                        Value = e.Nombre,
+                        Text = e.Nombre,
+                        Selected = e.Nombre == estado
+                    })
+                    .ToList()
+            };
+
+            ViewData["estado"] = estado;
+
+            return View(model);
         }
 
         [HttpGet]
@@ -175,25 +212,54 @@ namespace HelpDesk.Web.Controllers
 
             if (ticket == null || (!esAdministrador && ticket.IdUsuarioSolicitante != usuarioId))
             {
+                if (Request.IsAjaxRequest())
+                {
+                    return Json(new { ok = false, message = "No se encontró el ticket solicitado." });
+                }
+
                 return HttpNotFound();
             }
 
             if (model == null || !ModelState.IsValid || string.IsNullOrWhiteSpace(model.Texto))
             {
+                if (Request.IsAjaxRequest())
+                {
+                    return Json(new { ok = false, message = "Escribí un comentario válido." });
+                }
+
                 TempData["Error"] = "Escribí un comentario válido.";
                 return RedirectToAction("Details", new { id });
             }
+
+            var texto = model.Texto.Trim();
+            var ahora = DateTime.Now;
 
             _context.Comentarios.Add(new Comentario
             {
                 IdTicket = id,
                 IdUsuario = usuarioId,
-                Texto = model.Texto.Trim(),
-                Fecha = DateTime.Now
+                Texto = texto,
+                Fecha = ahora
             });
 
-            ticket.FechaActualizacion = DateTime.Now;
+            ticket.FechaActualizacion = ahora;
             _context.SaveChanges();
+
+            if (Request.IsAjaxRequest())
+            {
+                return Json(new
+                {
+                    ok = true,
+                    comentario = new
+                    {
+                        usuarioNombre = User.Identity.Name,
+                        usuarioRol = ObtenerUsuarioRol(),
+                        texto = texto,
+                        fecha = ahora.ToString("dd/MM/yyyy HH:mm")
+                    },
+                    fechaActualizacion = ahora.ToString("dd/MM/yyyy HH:mm")
+                });
+            }
 
             return RedirectToAction("Details", new { id });
         }
@@ -205,26 +271,40 @@ namespace HelpDesk.Web.Controllers
         {
             var ticket = _context.Tickets
                 .Include(t => t.Estado)
+                .Include(t => t.UsuarioAsignado)
                 .FirstOrDefault(t => t.Id == id);
 
             if (ticket == null)
             {
+                if (Request.IsAjaxRequest())
+                {
+                    return Json(new { ok = false, message = "No se encontró el ticket solicitado." });
+                }
+
                 return HttpNotFound();
             }
 
+            Usuario asignado = null;
+
             if (idUsuarioAsignado.HasValue)
             {
-                var asignado = _context.Usuarios
+                asignado = _context.Usuarios
                     .FirstOrDefault(u => u.Id == idUsuarioAsignado.Value && u.Estado == "Activo");
 
                 if (asignado == null)
                 {
+                    if (Request.IsAjaxRequest())
+                    {
+                        return Json(new { ok = false, message = "El usuario seleccionado no está disponible." });
+                    }
+
                     TempData["Error"] = "El usuario seleccionado no está disponible.";
                     return RedirectToAction("Details", new { id });
                 }
             }
 
             ticket.IdUsuarioAsignado = idUsuarioAsignado;
+            ticket.UsuarioAsignado = asignado;
             ticket.FechaActualizacion = DateTime.Now;
 
             if (idUsuarioAsignado.HasValue && ticket.Estado.Nombre == "Abierto")
@@ -233,10 +313,16 @@ namespace HelpDesk.Web.Controllers
                 if (enProceso != null)
                 {
                     ticket.IdEstado = enProceso.Id;
+                    ticket.Estado = enProceso;
                 }
             }
 
             _context.SaveChanges();
+
+            if (Request.IsAjaxRequest())
+            {
+                return Json(CrearRespuestaGestion(ticket, "Asignación guardada."));
+            }
 
             return RedirectToAction("Details", new { id });
         }
@@ -246,15 +332,25 @@ namespace HelpDesk.Web.Controllers
         [Authorize(Roles = "Administrador")]
         public ActionResult ChangeStatus(int id, int idEstado)
         {
-            var ticket = _context.Tickets.FirstOrDefault(t => t.Id == id);
+            var ticket = _context.Tickets
+                .Include(t => t.Estado)
+                .Include(t => t.UsuarioAsignado)
+                .FirstOrDefault(t => t.Id == id);
+
             var estado = _context.EstadosTicket.FirstOrDefault(e => e.Id == idEstado);
 
             if (ticket == null || estado == null)
             {
+                if (Request.IsAjaxRequest())
+                {
+                    return Json(new { ok = false, message = "No se pudo actualizar el estado del ticket." });
+                }
+
                 return HttpNotFound();
             }
 
             ticket.IdEstado = estado.Id;
+            ticket.Estado = estado;
             ticket.FechaActualizacion = DateTime.Now;
             ticket.FechaResolucion = estado.Nombre == "Resuelto" || estado.Nombre == "Cerrado"
                 ? DateTime.Now
@@ -262,7 +358,35 @@ namespace HelpDesk.Web.Controllers
 
             _context.SaveChanges();
 
+            if (Request.IsAjaxRequest())
+            {
+                return Json(CrearRespuestaGestion(ticket, "Estado actualizado."));
+            }
+
             return RedirectToAction("Details", new { id });
+        }
+
+        private object CrearRespuestaGestion(Ticket ticket, string mensaje)
+        {
+            return new
+            {
+                ok = true,
+                message = mensaje,
+                idEstado = ticket.IdEstado,
+                estado = ticket.Estado != null ? ticket.Estado.Nombre : string.Empty,
+                idUsuarioAsignado = ticket.IdUsuarioAsignado,
+                asignado = ticket.UsuarioAsignado != null ? ticket.UsuarioAsignado.Nombre : "Sin asignar",
+                fechaActualizacion = ticket.FechaActualizacion.ToString("dd/MM/yyyy HH:mm"),
+                fechaResolucion = ticket.FechaResolucion.HasValue
+                    ? ticket.FechaResolucion.Value.ToString("dd/MM/yyyy HH:mm")
+                    : null
+            };
+        }
+
+        private string ObtenerUsuarioRol()
+        {
+            var identity = User.Identity as ClaimsIdentity;
+            return identity?.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
         }
 
         private int ObtenerUsuarioId()

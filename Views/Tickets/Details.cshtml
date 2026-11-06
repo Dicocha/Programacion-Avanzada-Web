@@ -19,7 +19,7 @@
             Creado por <strong>@Model.Solicitante</strong> el @Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")
         </p>
     </div>
-    <span class="badge @estadoClass fs-6">@Model.Estado</span>
+    <span id="ticketEstadoBadge" class="badge @estadoClass fs-6">@Model.Estado</span>
 </div>
 
 @if (TempData["Error"] != null)
@@ -39,16 +39,15 @@
                     <dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.Categoria) ? "Sin categoría" : Model.Categoria)</dd>
 
                     <dt class="col-sm-4">Asignado a</dt>
-                    <dd class="col-sm-8">@Model.Asignado</dd>
+                    <dd id="asignadoTexto" class="col-sm-8">@Model.Asignado</dd>
 
                     <dt class="col-sm-4">Última actualización</dt>
-                    <dd class="col-sm-8">@Model.FechaActualizacion.ToString("dd/MM/yyyy HH:mm")</dd>
+                    <dd id="fechaActualizacionTexto" class="col-sm-8">@Model.FechaActualizacion.ToString("dd/MM/yyyy HH:mm")</dd>
 
-                    @if (Model.FechaResolucion.HasValue)
-                    {
-                        <dt class="col-sm-4">Fecha de resolución</dt>
-                        <dd class="col-sm-8">@Model.FechaResolucion.Value.ToString("dd/MM/yyyy HH:mm")</dd>
-                    }
+                    <dt id="fechaResolucionLabel" class="col-sm-4 @(Model.FechaResolucion.HasValue ? string.Empty : "d-none")">Fecha de resolución</dt>
+                    <dd id="fechaResolucionTexto" class="col-sm-8 @(Model.FechaResolucion.HasValue ? string.Empty : "d-none")">
+                        @(Model.FechaResolucion.HasValue ? Model.FechaResolucion.Value.ToString("dd/MM/yyyy HH:mm") : string.Empty)
+                    </dd>
                 </dl>
             </div>
         </div>
@@ -57,24 +56,23 @@
             <div class="card-body">
                 <h2 class="h5 mb-3">Comentarios</h2>
 
-                @if (Model.Comentarios.Any())
-                {
-                    <div class="comment-list mb-4">
-                        @foreach (var comentario in Model.Comentarios)
-                        {
-                            @Html.Partial("_CommentItem", comentario)
-                        }
-                    </div>
-                }
-                else
-                {
-                    <p class="text-muted">Todavía no hay comentarios. Sé el primero en escribir.</p>
-                }
+                <div id="comentariosLista" class="comment-list mb-4 @(Model.Comentarios.Any() ? string.Empty : "d-none")">
+                    @foreach (var comentario in Model.Comentarios)
+                    {
+                        @Html.Partial("_CommentItem", comentario)
+                    }
+                </div>
+
+                <p id="comentariosVacio" class="text-muted @(Model.Comentarios.Any() ? "d-none" : string.Empty)">
+                    Todavía no hay comentarios. Sé el primero en escribir.
+                </p>
 
                 <hr />
 
                 <h3 class="h6 mb-3">Agregar comentario</h3>
-                @using (Html.BeginForm("AddComment", "Tickets", new { id = Model.Id }, FormMethod.Post))
+                <div id="comentarioFeedback" class="alert d-none" role="alert"></div>
+
+                @using (Html.BeginForm("AddComment", "Tickets", new { id = Model.Id }, FormMethod.Post, new { id = "comentarioForm" }))
                 {
                     @Html.AntiForgeryToken()
                     @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
@@ -84,12 +82,13 @@
                         {
                             @class = "form-control",
                             rows = "3",
-                            placeholder = "Escribí tu comentario..."
+                            placeholder = "Escribí tu comentario...",
+                            id = "comentarioTexto"
                         })
                         @Html.ValidationMessageFor(m => m.NuevoComentario.Texto, "", new { @class = "text-danger small" })
                     </div>
 
-                    <button type="submit" class="btn btn-primary">Comentar</button>
+                    <button id="comentarioSubmit" type="submit" class="btn btn-primary">Comentar</button>
                 }
             </div>
         </div>
@@ -102,7 +101,7 @@
                 <div class="card-body">
                     <h2 class="h5 mb-3">Gestión del ticket</h2>
 
-                    @using (Html.BeginForm("Assign", "Tickets", new { id = Model.Id }, FormMethod.Post))
+                    @using (Html.BeginForm("Assign", "Tickets", new { id = Model.Id }, FormMethod.Post, new { id = "asignacionForm" }))
                     {
                         @Html.AntiForgeryToken()
                         <div class="mb-3">
@@ -110,11 +109,12 @@
                             @Html.DropDownList("idUsuarioAsignado", Model.UsuariosAsignables, "Sin asignar", new { @class = "form-select" })
                         </div>
                         <button type="submit" class="btn btn-outline-primary w-100">Guardar asignación</button>
+                        <div id="asignacionFeedback" class="alert d-none small mt-2" role="alert"></div>
                     }
 
                     <hr />
 
-                    @using (Html.BeginForm("ChangeStatus", "Tickets", new { id = Model.Id }, FormMethod.Post))
+                    @using (Html.BeginForm("ChangeStatus", "Tickets", new { id = Model.Id }, FormMethod.Post, new { id = "estadoForm" }))
                     {
                         @Html.AntiForgeryToken()
                         <div class="mb-3">
@@ -122,6 +122,7 @@
                             @Html.DropDownList("idEstado", Model.EstadosDisponibles, new { @class = "form-select" })
                         </div>
                         <button type="submit" class="btn btn-outline-primary w-100">Cambiar estado</button>
+                        <div id="estadoFeedback" class="alert d-none small mt-2" role="alert"></div>
                     }
                 </div>
             </div>
