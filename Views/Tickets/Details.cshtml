@@ -1,0 +1,132 @@
+﻿@model HelpDesk.Web.Models.ViewModels.TicketDetailsViewModel
+@using System.Linq
+@{
+    ViewBag.Title = Model.Titulo;
+    var estadoClass = Model.Estado == "Abierto"
+        ? "bg-primary"
+        : Model.Estado == "En Proceso"
+            ? "bg-warning text-dark"
+            : Model.Estado == "Resuelto"
+                ? "bg-success"
+                : "bg-secondary";
+}
+
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-start gap-3 mb-4">
+    <div>
+        <p class="text-muted mb-1">Ticket #@Model.Id</p>
+        <h1 class="h3 mb-2">@Model.Titulo</h1>
+        <p class="text-muted mb-0">
+            Creado por <strong>@Model.Solicitante</strong> el @Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")
+        </p>
+    </div>
+    <span class="badge @estadoClass fs-6">@Model.Estado</span>
+</div>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Descripción</h2>
+                <p class="ticket-description">@Model.Descripcion</p>
+
+                <dl class="row mb-0 mt-4">
+                    <dt class="col-sm-4">Categoría</dt>
+                    <dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.Categoria) ? "Sin categoría" : Model.Categoria)</dd>
+
+                    <dt class="col-sm-4">Asignado a</dt>
+                    <dd class="col-sm-8">@Model.Asignado</dd>
+
+                    <dt class="col-sm-4">Última actualización</dt>
+                    <dd class="col-sm-8">@Model.FechaActualizacion.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                    @if (Model.FechaResolucion.HasValue)
+                    {
+                        <dt class="col-sm-4">Fecha de resolución</dt>
+                        <dd class="col-sm-8">@Model.FechaResolucion.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Comentarios</h2>
+
+                @if (Model.Comentarios.Any())
+                {
+                    <div class="comment-list mb-4">
+                        @foreach (var comentario in Model.Comentarios)
+                        {
+                            @Html.Partial("_CommentItem", comentario)
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">Todavía no hay comentarios. Sé el primero en escribir.</p>
+                }
+
+                <hr />
+
+                <h3 class="h6 mb-3">Agregar comentario</h3>
+                @using (Html.BeginForm("AddComment", "Tickets", new { id = Model.Id }, FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+
+                    <div class="mb-3">
+                        @Html.TextAreaFor(m => m.NuevoComentario.Texto, new
+                        {
+                            @class = "form-control",
+                            rows = "3",
+                            placeholder = "Escribí tu comentario..."
+                        })
+                        @Html.ValidationMessageFor(m => m.NuevoComentario.Texto, "", new { @class = "text-danger small" })
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Comentar</button>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        @if (Model.PuedeGestionar)
+        {
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">Gestión del ticket</h2>
+
+                    @using (Html.BeginForm("Assign", "Tickets", new { id = Model.Id }, FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label class="form-label" for="idUsuarioAsignado">Asignar a</label>
+                            @Html.DropDownList("idUsuarioAsignado", Model.UsuariosAsignables, "Sin asignar", new { @class = "form-select" })
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary w-100">Guardar asignación</button>
+                    }
+
+                    <hr />
+
+                    @using (Html.BeginForm("ChangeStatus", "Tickets", new { id = Model.Id }, FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label class="form-label" for="idEstado">Estado</label>
+                            @Html.DropDownList("idEstado", Model.EstadosDisponibles, new { @class = "form-select" })
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary w-100">Cambiar estado</button>
+                    }
+                </div>
+            </div>
+        }
+
+        <a class="btn btn-outline-secondary w-100" href="@Url.Action("Index", "Tickets")">Volver al listado</a>
+    </div>
+</div>

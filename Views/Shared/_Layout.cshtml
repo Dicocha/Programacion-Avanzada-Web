@@ -22,6 +22,12 @@
                             <li class="nav-item">
                                 <a class="nav-link" href="@Url.Action("Index", "Home")">Inicio</a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="@Url.Action("Index", "Tickets")">Tickets</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="@Url.Action("Create", "Tickets")">Nuevo ticket</a>
+                            </li>
                         }
                     </ul>
                     @if (User.Identity.IsAuthenticated)

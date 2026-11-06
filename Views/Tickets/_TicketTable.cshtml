@@ -1,0 +1,61 @@
+﻿@model IEnumerable<HelpDesk.Web.Models.ViewModels.TicketListItemViewModel>
+@using System.Linq
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No hay tickets para mostrar.
+    </div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Título</th>
+                        <th scope="col">Solicitante</th>
+                        <th scope="col">Asignado</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col">Creado</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var ticket in Model)
+                    {
+                        var estadoClass = ticket.Estado == "Abierto"
+                            ? "bg-primary"
+                            : ticket.Estado == "En Proceso"
+                                ? "bg-warning text-dark"
+                                : ticket.Estado == "Resuelto"
+                                    ? "bg-success"
+                                    : "bg-secondary";
+
+                        <tr>
+                            <td class="text-muted">#@ticket.Id</td>
+                            <td>
+                                <a class="fw-semibold text-decoration-none" href="@Url.Action("Details", "Tickets", new { id = ticket.Id })">
+                                    @ticket.Titulo
+                                </a>
+                                @if (!string.IsNullOrWhiteSpace(ticket.Categoria))
+                                {
+                                    <div class="small text-muted">@ticket.Categoria</div>
+                                }
+                            </td>
+                            <td>@ticket.Solicitante</td>
+                            <td>@ticket.Asignado</td>
+                            <td><span class="badge @estadoClass">@ticket.Estado</span></td>
+                            <td class="text-nowrap">@ticket.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-primary" href="@Url.Action("Details", "Tickets", new { id = ticket.Id })">Ver</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

@@ -1,0 +1,10 @@
+﻿@model HelpDesk.Web.Models.ViewModels.TicketCommentViewModel
+
+<div class="comment-item">
+    <div class="comment-meta">
+        <strong>@Model.UsuarioNombre</strong>
+        <span class="badge bg-light text-dark border">@Model.UsuarioRol</span>
+        <span class="text-muted small">@Model.Fecha.ToString("dd/MM/yyyy HH:mm")</span>
+    </div>
+    <div class="comment-text">@Model.Texto</div>
+</div>

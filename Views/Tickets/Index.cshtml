@@ -1,0 +1,18 @@
+﻿@model IEnumerable<HelpDesk.Web.Models.ViewModels.TicketListItemViewModel>
+@{
+    ViewBag.Title = "Tickets";
+}
+
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
+    <div>
+        <h1 class="h3 mb-1">Tickets</h1>
+        <p class="text-muted mb-0">
+            @(User.IsInRole("Administrador")
+                ? "Todos los tickets registrados en el sistema."
+                : "Tus solicitudes de soporte.")
+        </p>
+    </div>
+    <a class="btn btn-primary" href="@Url.Action("Create", "Tickets")">Nuevo ticket</a>
+</div>
+
+@Html.Partial("_TicketTable", Model)

@@ -1,0 +1,56 @@
+﻿@model HelpDesk.Web.Models.ViewModels.TicketCreateViewModel
+@{
+    ViewBag.Title = "Nuevo ticket";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h3 mb-2">Nuevo ticket</h1>
+                <p class="text-muted mb-4">Contanos qué problema tenés para que podamos ayudarte.</p>
+
+                @using (Html.BeginForm("Create", "Tickets", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+
+                    <div class="mb-3">
+                        @Html.LabelFor(m => m.Titulo, new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.Titulo, new { @class = "form-control", autofocus = "autofocus" })
+                        @Html.ValidationMessageFor(m => m.Titulo, "", new { @class = "text-danger small" })
+                    </div>
+
+                    <div class="mb-3">
+                        @Html.LabelFor(m => m.Categoria, new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.Categoria, new
+                        {
+                            @class = "form-control",
+                            list = "categoriasTicket",
+                            placeholder = "Ej. Hardware, Software, Red"
+                        })
+                        <datalist id="categoriasTicket">
+                            <option value="Hardware"></option>
+                            <option value="Software"></option>
+                            <option value="Red"></option>
+                            <option value="Accesos"></option>
+                            <option value="Otros"></option>
+                        </datalist>
+                        @Html.ValidationMessageFor(m => m.Categoria, "", new { @class = "text-danger small" })
+                    </div>
+
+                    <div class="mb-4">
+                        @Html.LabelFor(m => m.Descripcion, new { @class = "form-label" })
+                        @Html.TextAreaFor(m => m.Descripcion, new { @class = "form-control", rows = "6" })
+                        @Html.ValidationMessageFor(m => m.Descripcion, "", new { @class = "text-danger small" })
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">Crear ticket</button>
+                        <a class="btn btn-outline-secondary" href="@Url.Action("Index", "Tickets")">Cancelar</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
