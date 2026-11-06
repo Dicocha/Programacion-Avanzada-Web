@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8" />
@@ -17,11 +17,33 @@
                 </button>
                 <div class="collapse navbar-collapse" id="menuPrincipal">
                     <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" href="@Url.Action("Index", "Home")">Inicio</a>
-                        </li>
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" href="@Url.Action("Index", "Home")">Inicio</a>
+                            </li>
+                        }
                     </ul>
-                    <span class="navbar-text text-light">Sistema de soporte técnico</span>
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="navbar-text text-light">
+                                @User.Identity.Name
+                                <span class="badge bg-secondary ms-1">
+                                    @(User.IsInRole("Administrador") ? "Administrador" : "Usuario")
+                                </span>
+                            </span>
+                            @using (Html.BeginForm("Logout", "Account", FormMethod.Post, new { @class = "d-inline" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-outline-light btn-sm">Salir</button>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <a class="btn btn-outline-light btn-sm" href="@Url.Action("Login", "Account")">Iniciar sesión</a>
+                    }
                 </div>
             </div>
         </nav>

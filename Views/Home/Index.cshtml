@@ -1,4 +1,4 @@
-@{
+﻿@{
     ViewBag.Title = "Inicio";
 }
 
@@ -9,8 +9,19 @@
             Plataforma interna para registrar incidencias técnicas, dar seguimiento a los tickets
             y gestionar la carga de trabajo del área de soporte.
         </p>
+        <p class="mb-0">
+            Sesión iniciada como <strong>@ViewBag.Usuario</strong>
+            <span class="badge bg-primary">@ViewBag.Rol</span>
+        </p>
     </div>
 </div>
+
+@if (User.IsInRole("Administrador"))
+{
+    <div class="alert alert-info">
+        Como administrador podés gestionar tickets, asignar responsables y consultar reportes.
+    </div>
+}
 
 <div class="row g-4">
     <div class="col-md-4">
