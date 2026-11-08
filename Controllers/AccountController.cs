@@ -21,7 +21,7 @@ namespace HelpDesk.Web.Controllers
         {
             if (Request.IsAuthenticated)
             {
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "Tickets");
             }
 
             return View(new LoginViewModel { ReturnUrl = returnUrl });
@@ -74,7 +74,7 @@ namespace HelpDesk.Web.Controllers
                 return Redirect(model.ReturnUrl);
             }
 
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Index", "Tickets");
         }
 
         [HttpPost]
