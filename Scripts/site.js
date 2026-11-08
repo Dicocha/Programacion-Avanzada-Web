@@ -1,9 +1,15 @@
 ﻿(function () {
     "use strict";
 
+    var intervaloActualizacionTickets = 5000;
+    var actualizandoTickets = false;
+    var temporizadorTickets = null;
+    var filtrosTickets = null;
+
     $(function () {
         activarNavegacion();
         inicializarFiltroTickets();
+        inicializarActualizacionTickets();
         inicializarComentarios();
         inicializarGestionTicket();
     });
@@ -36,27 +42,102 @@
         $form.on("submit", function (event) {
             event.preventDefault();
 
+            if (actualizandoTickets) {
+                return;
+            }
+
             var $contenedor = $("#ticketsTableContainer");
             var $boton = $form.find("button[type='submit']");
 
+            filtrosTickets = $form.serialize();
+            clearTimeout(temporizadorTickets);
+            actualizandoTickets = true;
             $boton.prop("disabled", true);
             $contenedor.css("opacity", 0.5);
 
             $.ajax({
                 url: $form.attr("action"),
                 type: "GET",
-                data: $form.serialize(),
+                data: filtrosTickets,
                 dataType: "html",
                 cache: false
             }).done(function (html) {
+                if (esPantallaLogin(html)) {
+                    window.location.reload();
+                    return;
+                }
+
                 $contenedor.html(html);
             }).fail(function () {
                 $contenedor.html('<div class="alert alert-danger">No se pudo aplicar el filtro. Intentá nuevamente.</div>');
             }).always(function () {
+                actualizandoTickets = false;
                 $boton.prop("disabled", false);
                 $contenedor.css("opacity", 1);
+                programarActualizacionTickets($form, $contenedor);
             });
         });
+    }
+
+    function inicializarActualizacionTickets() {
+        var $form = $("#ticketsFiltro");
+        var $contenedor = $("#ticketsTableContainer");
+
+        if (!$form.length || !$contenedor.length) {
+            return;
+        }
+
+        filtrosTickets = $form.serialize();
+
+        $(document).on("visibilitychange", function () {
+            if (!document.hidden) {
+                clearTimeout(temporizadorTickets);
+                actualizarTicketsSilencioso($form, $contenedor);
+            }
+        });
+
+        programarActualizacionTickets($form, $contenedor);
+    }
+
+    function programarActualizacionTickets($form, $contenedor) {
+        clearTimeout(temporizadorTickets);
+        temporizadorTickets = setTimeout(function () {
+            actualizarTicketsSilencioso($form, $contenedor);
+        }, intervaloActualizacionTickets);
+    }
+
+    function actualizarTicketsSilencioso($form, $contenedor) {
+        if (document.hidden || actualizandoTickets) {
+            programarActualizacionTickets($form, $contenedor);
+            return;
+        }
+
+        actualizandoTickets = true;
+
+        $.ajax({
+            url: $form.attr("action"),
+            type: "GET",
+            data: filtrosTickets,
+            dataType: "html",
+            cache: false,
+            timeout: 10000
+        }).done(function (html) {
+            if (esPantallaLogin(html)) {
+                window.location.reload();
+                return;
+            }
+
+            if (html !== $contenedor.html()) {
+                $contenedor.html(html);
+            }
+        }).always(function () {
+            actualizandoTickets = false;
+            programarActualizacionTickets($form, $contenedor);
+        });
+    }
+
+    function esPantallaLogin(html) {
+        return typeof html === "string" && html.indexOf('name="Identificador"') !== -1;
     }
 
     function inicializarComentarios() {
