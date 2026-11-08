@@ -30,7 +30,17 @@ namespace HelpDesk.Web.Controllers
 
             if (buscar != null)
             {
-                query = query.Where(t => t.Titulo.Contains(buscar) || t.Descripcion.Contains(buscar));
+                var termino = buscar.TrimStart('#').Trim();
+                int numero;
+
+                if (int.TryParse(termino, out numero))
+                {
+                    query = query.Where(t => t.Id == numero || t.Titulo.Contains(buscar));
+                }
+                else
+                {
+                    query = query.Where(t => t.Titulo.Contains(buscar));
+                }
             }
 
             if (estado != null)
@@ -349,12 +359,24 @@ namespace HelpDesk.Web.Controllers
                 return HttpNotFound();
             }
 
+            var ahora = DateTime.Now;
+            var estadoResuelto = estado.Nombre == "Resuelto" || estado.Nombre == "Cerrado";
+
             ticket.IdEstado = estado.Id;
             ticket.Estado = estado;
-            ticket.FechaActualizacion = DateTime.Now;
-            ticket.FechaResolucion = estado.Nombre == "Resuelto" || estado.Nombre == "Cerrado"
-                ? DateTime.Now
-                : (DateTime?)null;
+            ticket.FechaActualizacion = ahora;
+
+            if (estadoResuelto)
+            {
+                if (!ticket.FechaResolucion.HasValue)
+                {
+                    ticket.FechaResolucion = ahora;
+                }
+            }
+            else
+            {
+                ticket.FechaResolucion = null;
+            }
 
             _context.SaveChanges();
 
