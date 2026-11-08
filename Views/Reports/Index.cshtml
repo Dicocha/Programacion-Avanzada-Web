@@ -1,0 +1,158 @@
+﻿@model HelpDesk.Web.Models.ViewModels.ReportViewModel
+@using System.Linq
+@{
+    ViewBag.Title = "Reportes";
+}
+
+@functions {
+    private string ClaseEstado(string estado)
+    {
+        switch (estado)
+        {
+            case "Abierto":
+                return "bg-primary";
+            case "En Proceso":
+                return "bg-warning text-dark";
+            case "Resuelto":
+                return "bg-success";
+            default:
+                return "bg-secondary";
+        }
+    }
+}
+
+<div class="mb-4">
+    <h1 class="h3 mb-1">Reportes del área</h1>
+    <p class="text-muted mb-0">Todos los tickets registrados y su estado actual.</p>
+</div>
+
+<form class="row g-2 align-items-end mb-4" method="get" action="@Url.Action("Index", "Reports")">
+    <div class="col-sm-4 col-lg-3">
+        <label class="form-label" for="estado">Estado</label>
+        @Html.DropDownListFor(m => m.Estado, Model.Estados, "Todos", new { @class = "form-select" })
+    </div>
+    <div class="col-sm-auto">
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+    </div>
+    <div class="col-sm-auto">
+        <a class="btn btn-outline-secondary" href="@Url.Action("Index", "Reports")">Limpiar</a>
+    </div>
+</form>
+
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <p class="text-muted mb-1">Total de tickets</p>
+                <p class="h3 mb-0">@Model.TotalTickets</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <p class="text-muted mb-1">Pendientes</p>
+                <p class="h3 mb-0">@Model.Pendientes</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <p class="text-muted mb-1">Resueltos / cerrados</p>
+                <p class="h3 mb-0">@Model.ResueltosOCerrados</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h2 class="h5 mb-1">Resumen por estado</h2>
+        <p class="text-muted small mb-3">Calculado sobre todos los tickets del área.</p>
+
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">Estado</th>
+                        <th scope="col" class="text-end">Cantidad</th>
+                        <th scope="col" class="text-end">% del total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.ResumenEstados)
+                    {
+                        <tr>
+                            <td><span class="badge @ClaseEstado(item.Estado)">@item.Estado</span></td>
+                            <td class="text-end">@item.Cantidad</td>
+                            <td class="text-end">@string.Format("{0:0.0}%", item.Porcentaje)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h2 class="h5 mb-1">Tickets del área</h2>
+        <p class="text-muted small mb-3">Mostrando @Model.Tickets.Count de @Model.TotalTickets tickets.</p>
+
+        @if (Model.TotalTickets == 0)
+        {
+            <div class="alert alert-info mb-0">No hay tickets registrados actualmente.</div>
+        }
+        else if (!Model.Tickets.Any())
+        {
+            <div class="alert alert-info mb-0">No hay tickets con el estado seleccionado.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Título</th>
+                            <th scope="col">Solicitante</th>
+                            <th scope="col">Asignado a</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col">Creado</th>
+                            <th scope="col">Resuelto</th>
+                            <th scope="col" class="text-end">Tiempo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ticket in Model.Tickets)
+                        {
+                            <tr>
+                                <td class="text-muted">#@ticket.Id</td>
+                                <td>
+                                    <a class="fw-semibold text-decoration-none" href="@Url.Action("Details", "Tickets", new { id = ticket.Id })">
+                                        @ticket.Titulo
+                                    </a>
+                                </td>
+                                <td>@ticket.Solicitante</td>
+                                <td>@ticket.Asignado</td>
+                                <td><span class="badge @ClaseEstado(ticket.Estado)">@ticket.Estado</span></td>
+                                <td class="text-nowrap">@ticket.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="text-nowrap">
+                                    @(ticket.FechaResolucion.HasValue
+                                        ? ticket.FechaResolucion.Value.ToString("dd/MM/yyyy HH:mm")
+                                        : "-")
+                                </td>
+                                <td class="text-end text-nowrap">
+                                    @(ticket.HorasResolucion.HasValue
+                                        ? string.Format("{0:0.0} h", ticket.HorasResolucion.Value)
+                                        : "Pendiente")
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

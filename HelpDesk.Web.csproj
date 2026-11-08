@@ -119,7 +119,7 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\Startup.Auth.cs" />
     <Compile Include="Controllers\AccountController.cs" />
-    <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\ReportsController.cs" />
     <Compile Include="Controllers\TicketsController.cs" />
     <Compile Include="Data\HelpDeskContext.cs" />
     <Compile Include="Data\SeedData.cs" />
@@ -137,6 +137,7 @@
     <Compile Include="Models\Entities\Usuario.cs" />
     <Compile Include="Models\ViewModels\CommentCreateViewModel.cs" />
     <Compile Include="Models\ViewModels\LoginViewModel.cs" />
+    <Compile Include="Models\ViewModels\ReportViewModel.cs" />
     <Compile Include="Models\ViewModels\TicketCommentViewModel.cs" />
     <Compile Include="Models\ViewModels\TicketCreateViewModel.cs" />
     <Compile Include="Models\ViewModels\TicketDetailsViewModel.cs" />
@@ -153,7 +154,6 @@
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Account\AccessDenied.cshtml" />
     <Content Include="Views\Account\Login.cshtml" />
-    <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Views\Tickets\Create.cshtml" />
@@ -161,13 +161,18 @@
     <Content Include="Views\Tickets\Index.cshtml" />
     <Content Include="Views\Tickets\_CommentItem.cshtml" />
     <Content Include="Views\Tickets\_TicketTable.cshtml" />
+    <Content Include="Views\Reports\Index.cshtml" />
     <Content Include="Views\Web.config" />
     <Content Include="Web.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Database\Diagrama.png" />
+    <None Include="Database\scriptDb.md" />
+    <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
     <Folder Include="Database\" />
-    <Folder Include="Views\Reports\" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Migrations\202611052331465_InitialCreate.resx">
